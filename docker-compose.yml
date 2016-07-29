@@ -9,8 +9,7 @@ services:
     volumes:
       - mysql_prod:/var/lib/mysql
       - ./prod/${COMPOSE_PROJECT_NAME}/:/var/www/html/
-    env_file:
-      - ./prod/${COMPOSE_PROJECT_NAME}/docker.env
+    env_file: .env
 
   dev:
     extends:
