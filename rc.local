@@ -1,0 +1,4 @@
+#!/bin/sh -e
+service mysql start
+service apache2 start
+exit 0

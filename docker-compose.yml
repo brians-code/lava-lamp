@@ -1,0 +1,32 @@
+version: '2'
+
+services:
+
+  prod:
+    image: lamp
+    ports:
+      - 80
+    volumes:
+      - mysql_prod:/var/lib/mysql
+      - ./prod/${COMPOSE_PROJECT_NAME}/:/var/www/html/
+    env_file:
+      - ./prod/${COMPOSE_PROJECT_NAME}/docker.env
+
+  dev:
+    extends:
+      service: prod
+    volumes:
+      - mysql_dev:/var/lib/mysql
+      - ./${COMPOSE_PROJECT_NAME}/dev:/var/www/html
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+volumes:
+  mysql_prod:
+  mysql_dev:
