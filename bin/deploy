@@ -1,16 +1,12 @@
 #!/bin/bash
-
-
-## Set defaults
-# TODO make optional args -d -p -e
-dev_parent=$(pwd)"/dev/"
-prod_parent=$(pwd)"/prod/"
-env=".env"
-ctag="v0.0.1"
+source ~/projects/.config
+source ~/projects/.private
 
 
 ### Validate
-if [ $# -eq 0 ] || [ ! -d $dev_parent$1 ]
+# TODO Make optional args -d -p -e
+# TODO Lock paths to base lava-lamp directory or execute from pwd?
+if [ $# -eq 0 ] || ! [ -d $dev/$1 ]
 then
   echo $'Error: Project not found.\nUsage: deploy [PROJECT]'
   exit 0
@@ -19,34 +15,34 @@ then
   echo $'Error: Too many args.\nUsage: deploy [PROJECT]'    
   exit 0
 fi
-prod=$prod_parent$1/
-dev=$dev_parent$1/
+
+
+### Set defaults
+project=$1
+ctag="v0.0.1"
 
 
 ### Update/Create git repo
 # TODO allow dev and prod to be remote
-mkdir -p $prod && cd $_
-
-if [ ! -d .git ]
+mkdir -p $prod/$project/$data
+mkdir -p $prod/$project/$web && cd $_
+if ! [ -d .git ]
 then
   git init
-  git remote add origin $dev
+  git remote add origin $dev/$project
 fi
-
-# Fetches names of tags, no history or files
+# Pulls the most recent tag, no history or branches
 # More secure and saves space
 git fetch --tags --depth 1
-
+# TODO Organize this into if/fi blocks after solving scope issues
 ctag=$(git describe --tags $(git rev-list origin/master --tags --walk-reflogs --max-count=1)) && echo "Latest tagged commit is "$ctag || \
 $(echo "No tags found, creating "$ctag && git -C $dev tag -a $ctag -m "Tag created by deploy script" && git fetch --tags --depth 1)
-
-# Pulls the most recent tag, no history or branches
 git checkout -q $ctag
-
 echo $'PROD is now set to version '$(git describe --tags)
 
+
 ### Import/Create environment file if none present
-if [ ! -f $prod$env ]
+if [ ! -f $env ]
 then
   echo $'PROD=true\nVERSION='$tag > $prod$env
 fi

@@ -3,13 +3,13 @@ version: '2'
 services:
 
   prod:
-    image: lamp
+    image: codekitchenws/lamp
     ports:
       - 80
     volumes:
-      - mysql_prod:/var/lib/mysql
-      - ./prod/${COMPOSE_PROJECT_NAME}/:/var/www/html/
-    env_file: .env
+      - ./prod/${COMPOSE_PROJECT_NAME}/data:mysql_prod:/var/lib/mysql
+      - ./prod/${COMPOSE_PROJECT_NAME}/web:/var/www/html/
+    env_file: docker.env
 
   dev:
     extends:
@@ -26,6 +26,4 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
-volumes:
-  mysql_prod:
-  mysql_dev:
+# TODO copy mysql dir into project/data before hard mounting for permanent storage?

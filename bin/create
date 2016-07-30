@@ -1,0 +1,31 @@
+#!/bin/bash
+source $projects/.config
+source $projects/.private
+
+
+### Validate
+if [ $# -eq 0 ]
+then
+  echo $'Error: Project not found.\nUsage: create [PROJECT]'
+  exit 1
+elif [ $# -gt 1 ]
+then
+  echo $'Error: Too many args.\nUsage: create [PROJECT]'    
+  exit 1
+elif  [ -d $dev$1 ]
+then
+  echo $'Error: Project already exists.\nUsage: create [PROJECT]'    
+  exit 1
+fi
+
+
+### Set defaults
+project=$1/
+
+
+### Create project
+# TODO make github clone optional
+git clone https://$github_password@github.com/$github_username/$project $dev
+echo $'DEV=true' > $project_web$env
+echo ".env" >> $project_web".gitignore"
+mkdir -p $project_data
