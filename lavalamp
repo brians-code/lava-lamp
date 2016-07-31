@@ -1,55 +1,46 @@
 #!/bin/bash
-source ~/projects/.config
-source ~/projects/.private
+projects=~/projects
+source $projects/.private
+dev=$projects/dev
+prod=$projects/prod
+data=data
+web=web
+env=.env
 
-
-function lltest () {
-    echo $dev/$1
-}
-
+# Launch nginx-proxy is it isn't already running
+#docker run --restart=always --name nginx-proxy -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
 
 function clone () {
     ### Validate
-    if [ $# -eq 0 ]
-    then
-      echo $'Error: Project not found.\nUsage: create [PROJECT]'
-      exit 1
-    elif [ $# -gt 1 ]
-    then
-      echo $'Error: Too many args.\nUsage: create [PROJECT]'    
-      exit 1
-    fi
-    
-    
+    _valid_project $@
+
     ### Create project
     # TODO make github clone optional
     project=$1
     git clone https://$github_password@github.com/$github_username/$project $dev/$project/$web
 
-
     return 0
+}
+
+
+function launch () {
+    COMPOSE_PROJECT_NAME=$1 docker-compose up -d $2
+}
+
+
+function crash () {
+    COMPOSE_PROJECT_NAME=$1 docker-compose $2 down -v
 }
 
 
 function deploy () {
     ### Validate
-    # TODO Make optional args -d -p -e
-    # TODO Lock paths to base lava-lamp directory or execute from pwd?
-    if [ $# -eq 0 ]
-    then
-      echo $'Error: Project not found.\nUsage: deploy [PROJECT]'
-      exit 0
-    elif [ $# -gt 1 ]
-    then
-      echo $'Error: Too many args.\nUsage: deploy [PROJECT]'    
-      exit 0
-    fi
-
+    _valid_project $@
 
     ### Update/Create git repo
-    # TODO allow dev and prod to be remote
     # Pulls the most recent tag, no history or branches
     # More secure and saves space
+    # TODO allow dev and prod to be remote
     project=$1
     local=$prod/$project/$web
     origin=$dev/$project/$web
@@ -70,8 +61,7 @@ function deploy () {
     git -C $local checkout -q $(_latest_origin_tag $local)
     echo $'PROD is now set to version '$(git -C $local describe --tags)
 
-
-    ### Import/Create environment file if none present
+    ### Create environment file if none present
     if [ ! -f $local/$env ]
     then
       echo $'PROD=true\nVERSION='$tag > $local/$env
@@ -81,6 +71,31 @@ function deploy () {
 }
 
 
+function clean_docker () {
+    docker rm -v $(docker ps -a -q)
+    docker volume rm $(docker volume ls -qf dangling=true)
+    docker images --quiet --filter=dangling=true | xargs --no-run-if-empty docker rmi
+}
+
+
 function _latest_origin_tag () {
     echo $(git -C $1 describe --tags $(git -C $1 rev-list origin/master --tags --walk-reflogs --max-count=1))
+}
+
+function _valid_project () {
+    if [ $# -eq 0 ]
+    then
+      echo $'Error: You must enter a project name.'
+      return 1
+    elif [ $# -gt 1 ]
+    then
+      echo $'Error: Too many args.'    
+      return 1
+    fi
+    return 0
+}
+
+
+function COMPOSE_PROJECT_NAME () {
+    return 0
 }

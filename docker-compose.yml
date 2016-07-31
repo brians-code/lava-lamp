@@ -3,20 +3,40 @@ version: '2'
 services:
 
   prod:
-    image: codekitchenws/lamp
+    image: lamp-prod
     ports:
       - 80
     volumes:
-      - ./prod/${COMPOSE_PROJECT_NAME}/data:mysql_prod:/var/lib/mysql
       - ./prod/${COMPOSE_PROJECT_NAME}/web:/var/www/html/
-    env_file: docker.env
+    links: 
+      - prod_data
+    env_file:
+      - ./prod/${COMPOSE_PROJECT_NAME}/web/.env
+    restart: always
+
+
+  prod_data:
+    image: mysql:5.7.13
+    volumes:
+      - ./prod/${COMPOSE_PROJECT_NAME}/data:/var/lib/mysql
+    restart: always
+
 
   dev:
-    extends:
-      service: prod
+    image: lamp-dev
     volumes:
-      - mysql_dev:/var/lib/mysql
-      - ./${COMPOSE_PROJECT_NAME}/dev:/var/www/html
+      - ./dev/${COMPOSE_PROJECT_NAME}/web:/var/www/html
+    links:
+      - dev_data
+    environment:
+      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}.dev
+
+
+  dev_data:
+    image: mysql:5.7.13
+    volumes:
+      - ./dev/${COMPOSE_PROJECT_NAME}/data:/var/lib/mysql
+
 
   nginx-proxy:
     image: jwilder/nginx-proxy
@@ -25,5 +45,4 @@ services:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-
-# TODO copy mysql dir into project/data before hard mounting for permanent storage?
+    restart: always

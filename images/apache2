@@ -1,0 +1,4 @@
+#!/bin/sh
+TZ=MET-1METDST
+export TZ
+/usr/local/apache2/bin/httpd -DNO_DETACH
