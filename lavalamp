@@ -7,35 +7,59 @@ data=data
 web=web
 env=.env
 
-# Launch nginx-proxy is it isn't already running
-#docker run --restart=always --name nginx-proxy -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
 
-function clone () {
+function create () {
     ### Validate
-    _valid_project $@
+    _valid_project $@ || return 1
 
     ### Create project
     # TODO make github clone optional
     project=$1
     git clone https://$github_password@github.com/$github_username/$project $dev/$project/$web
-
-    return 0
 }
 
 
 function launch () {
+    ### Validate    
+    _valid_project $@ || return 1
+
+    ### Create/Start service(s)
+    # Usage: launch project-name [environment-name]
     COMPOSE_PROJECT_NAME=$1 docker-compose up -d $2
 }
 
 
 function crash () {
-    COMPOSE_PROJECT_NAME=$1 docker-compose $2 down -v
+    ### Validate
+    _valid_project $@ || return 1
+
+    ### Stop/Remove service(s)
+    # Usage: land project-name
+    # Warning: This will stop and remove all services associated with project, including prod
+    # To stop and remove a single service: land project-name environment-name
+    COMPOSE_PROJECT_NAME=$1 docker-compose down -v
+}
+
+
+function land () {
+    ### Validate
+    _valid_project $@ || return 1
+    
+    ### Stop and remove container
+    # Usage: crash project-name environment-name
+    if [ $# -eq 2 ]
+    then
+      container=$1-$2
+    else
+      container=$1
+    fi
+    docker rm -fv $container
 }
 
 
 function deploy () {
     ### Validate
-    _valid_project $@
+    _valid_project $@ || return 1
 
     ### Update/Create git repo
     # Pulls the most recent tag, no history or branches
@@ -66,8 +90,6 @@ function deploy () {
     then
       echo $'PROD=true\nVERSION='$tag > $local/$env
     fi
-
-    return 0
 }
 
 
@@ -82,20 +104,22 @@ function _latest_origin_tag () {
     echo $(git -C $1 describe --tags $(git -C $1 rev-list origin/master --tags --walk-reflogs --max-count=1))
 }
 
+
 function _valid_project () {
     if [ $# -eq 0 ]
     then
-      echo $'Error: You must enter a project name.'
+      echo 'Error: Project name missing.'
       return 1
-    elif [ $# -gt 1 ]
+    elif [ ! -d $dev/$1 ]
     then
-      echo $'Error: Too many args.'    
+      echo 'Error: Project '$1' does not exist.'
       return 1
     fi
     return 0
 }
 
 
+### This is simply here to make COMPOSE_PROJECT_NAME autocomplete
 function COMPOSE_PROJECT_NAME () {
     return 0
 }

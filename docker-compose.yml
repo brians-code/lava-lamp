@@ -4,37 +4,24 @@ services:
 
   prod:
     image: lamp-prod
+    container_name: ${COMPOSE_PROJECT_NAME}-prod
+    environment:
+      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-prod
     ports:
       - 80
     volumes:
       - ./prod/${COMPOSE_PROJECT_NAME}/web:/var/www/html/
-    links: 
-      - prod_data
-    env_file:
-      - ./prod/${COMPOSE_PROJECT_NAME}/web/.env
-    restart: always
-
-
-  prod_data:
-    image: mysql:5.7.13
-    volumes:
       - ./prod/${COMPOSE_PROJECT_NAME}/data:/var/lib/mysql
     restart: always
 
 
   dev:
     image: lamp-dev
+    container_name: ${COMPOSE_PROJECT_NAME}-dev
+    environment:
+      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-dev
     volumes:
       - ./dev/${COMPOSE_PROJECT_NAME}/web:/var/www/html
-    links:
-      - dev_data
-    environment:
-      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}.dev
-
-
-  dev_data:
-    image: mysql:5.7.13
-    volumes:
       - ./dev/${COMPOSE_PROJECT_NAME}/data:/var/lib/mysql
 
 
