@@ -7,19 +7,21 @@ cloud9=$projects/cloud9
 
 
 function create () {
-    ### Create project
-    # TODO make github clone optional
+    # Usage: create project-name
+    # Note that project-name needs to match the github repo name
     project=$1
     git clone https://$github_password@github.com/$github_username/$project $dev/$project
 }
 
 
 function launch () {
-    ### Validate    
+    # Usage: launch project-name [environment-name]
+    # Creates instance of cloud9 editor attached to projects/dev/project-name
+    
+    # Validate    
     _valid_project $@ || return 1
 
-    ### Create/Start service(s)
-    # Usage: launch project-name [environment-name]
+    # Create/Start service(s)
     rm $cloud9
     ln -s $projects/$dev/$project $cloud9
     CLOUD9=$cloud9 MYUID=$UID docker-compose -f nginx-proxy.yml -f cloud9.yml up -d
@@ -28,20 +30,22 @@ function launch () {
 
 
 function crash () {
-    ### Validate
-    _valid_project $@ || return 1
-
-    ### Stop/Remove service(s)
     # Usage: crash project-name
     # Warning: This will stop and remove all services associated with project, including prod
     # To stop and remove a single service, use 'land project-name environment-name'
+    
+    # Validate
+    _valid_project $@ || return 1
+
+    # Stop/Remove service(s)
     COMPOSE_PROJECT_NAME=$1 docker-compose down -v
 }
 
 
 function land () {
-    ### Stop and remove container
     # Usage: land project-name environment-name
+
+    # Stop and remove container
     container=$1
     if [ $# -eq 2 ]
     then
@@ -52,13 +56,12 @@ function land () {
 
 
 function deploy () {
-    ### Validate
+    # Validate
     _valid_project $@ || return 1
 
-    ### Update/Create git repo
+    # Update/Create git repo
     # Pulls the most recent tag, no history or branches
     # More secure and saves space
-    # TODO allow dev and prod to be remote
     local=$prod/$project
     origin=$dev/$project
     mkdir -p $local
@@ -85,7 +88,8 @@ function deploy () {
 }
 
 
-function clean_docker () {
+##
+function docker-clean () {
     docker rm -v $(docker ps -a -q)
     docker volume rm $(docker volume ls -qf dangling=true)
     docker images --quiet --filter=dangling=true | xargs --no-run-if-empty docker rmi
@@ -112,7 +116,7 @@ function _valid_project () {
 }
 
 
-### This is simply here to make COMPOSE_PROJECT_NAME autocomplete
+### This is only here to make COMPOSE_PROJECT_NAME autocomplete
 function COMPOSE_PROJECT_NAME () {
     return 0
 }
