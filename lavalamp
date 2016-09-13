@@ -79,16 +79,9 @@ function deploy () {
     fi
     git -C $local checkout -q $(_latest_origin_tag $local)
     echo $'PROD is now set to version '$(git -C $local describe --tags)
-
-    ### Create environment file if none present
-    if [ ! -f $local/$env ]
-    then
-      echo $'PROD=true\nVERSION='$tag > $local/$env
-    fi
 }
 
 
-##
 function docker-clean () {
     docker rm -v $(docker ps -a -q)
     docker volume rm $(docker volume ls -qf dangling=true)
