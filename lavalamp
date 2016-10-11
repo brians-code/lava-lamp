@@ -21,7 +21,8 @@ function launch () {
     # Validate    
     _valid_project $@ || return 1
 
-    # Create/Start service(s)
+    # Update cloud9 symlink and start/restart container
+    # Using docker-compose down would delete the cloud9 container, which might have a customized dev environment
     rm $cloud9
     ln -s $projects/$dev/$project $cloud9
     CLOUD9=$cloud9 MYUID=$UID docker-compose -f nginx-proxy.yml -f cloud9.yml up -d
@@ -82,6 +83,7 @@ function deploy () {
 }
 
 
+# Removes stopped containers, unattached volumes, and unused untagged images
 function docker-clean () {
     docker rm -v $(docker ps -a -q)
     docker volume rm $(docker volume ls -qf dangling=true)
@@ -109,7 +111,7 @@ function _valid_project () {
 }
 
 
-### This is only here to make COMPOSE_PROJECT_NAME autocomplete
+# This is only here to make COMPOSE_PROJECT_NAME autocomplete
 function COMPOSE_PROJECT_NAME () {
     return 0
 }
