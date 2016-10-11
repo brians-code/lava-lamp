@@ -4,6 +4,8 @@ source $projects/.private
 dev=$projects/dev
 prod=$projects/prod
 cloud9=$projects/cloud9
+mkdir dev
+mkdir prod
 
 
 function create () {
