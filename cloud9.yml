@@ -3,7 +3,7 @@ version: '2'
 services:
 
   cloud9:
-    image: codekitchenws/phusion-cloud9
+    image: phusion-cloud9-php7
     container_name: cloud9
     environment:
       - VIRTUAL_HOST=cloud9.dev

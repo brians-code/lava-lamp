@@ -16,8 +16,8 @@ function create () {
 }
 
 
-function launch () {
-    # Usage: launch project-name [environment-name]
+function dev () {
+    # Usage: dev project-name [environment-name]
     # Creates instance of cloud9 editor attached to projects/dev/project-name
     
     # Validate    
@@ -26,7 +26,7 @@ function launch () {
     # Update cloud9 symlink and start/restart container
     # Using docker-compose down would delete the cloud9 container, which might have a customized dev environment
     rm $cloud9
-    ln -s $projects/$dev/$project $cloud9
+    ln -s $dev/$project $cloud9
     CLOUD9=$cloud9 MYUID=$UID docker-compose -f nginx-proxy.yml -f cloud9.yml up -d
     docker restart cloud9
 }
